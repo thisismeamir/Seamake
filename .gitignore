@@ -22,3 +22,8 @@ gradle-app.setting
 
 # Ignore Gradle build output directory
 build
+/.idea/.gitignore
+/.idea/AndroidProjectSystem.xml
+/.idea/gradle.xml
+/.idea/misc.xml
+/.idea/vcs.xml
