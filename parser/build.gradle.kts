@@ -1,11 +1,10 @@
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("plugin.serialization")  version "2.2.21"
-    application
     antlr
 }
 
-group = "io.github.thisismeamir.seamake"
+group = "io.github.thisismeamir.seamake.parser"
 version = "0.0.1"
 
 repositories {
@@ -32,11 +31,11 @@ tasks.generateGrammarSource {
     arguments = arguments + listOf(
         "-visitor",
         "-listener",
-        "-package", "com.iskportal.koly.parsers",
+        "-package", "io.github.thisismeamir.seamake.parser",
         "-long-messages"
     )
 
-    outputDirectory = file("src/main/generated/io/github/thisismeamir/parsers") 
+    outputDirectory = file("src/main/generated/")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -52,37 +51,13 @@ sourceSets {
     }
 }
 
-// =============================================================================
-// APPLICATION CONFIGURATION
-// =============================================================================
-
-application {
-    mainClass.set("io.github.thisismeamir.seamake.analyzers.parser.app.MainKt")
-    applicationName = "seamake"
-
-    applicationDefaultJvmArgs = listOf(
-        "-Xmx512m",
-        "-Xms256m",
-        "-XX:+UseG1GC",
-        "-Dfile.encoding=UTF-8",
-        "-Duser.timezone=UTC"
-    )
-}
-
-tasks.named<JavaExec>("run") {
-    standardInput = System.`in`
-}
-
-// =============================================================================
-// DISTRIBUTION CONFIGURATION
-// =============================================================================
-
-distributions {
-    main {
-        contents {
-            from("README.md")
-            from("LICENSE")
-        }
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "io.github.thisismeamir.seamake.analyzer.SeamakeKt"
+    }
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 }
 
