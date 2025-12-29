@@ -1,5 +1,5 @@
 // Generated from CMake.g4 by ANTLR 4.13.2
-package com.iskportal.koly.parsers;
+package io.github.thisismeamir.seamake.parser;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
