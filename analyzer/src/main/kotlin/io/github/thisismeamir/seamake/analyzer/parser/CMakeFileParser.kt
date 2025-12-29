@@ -1,6 +1,8 @@
 package io.github.thisismeamir.seamake.analyzer.parser
 
 
+import io.github.thisismeamir.seamake.parser.CMakeLexer
+import io.github.thisismeamir.seamake.parser.CMakeParser
 import org.antlr.v4.runtime.*
 import java.io.File
 
