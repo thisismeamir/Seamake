@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("plugin.serialization")  version "2.2.21"
-    antlr
+//    antlr
 }
 
 group = "io.github.thisismeamir.seamake.parser"
@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     // ANTLR dependencies
-    antlr("org.antlr:antlr4:4.+")
+//    antlr("org.antlr:antlr4:4.+")
     implementation("org.antlr:antlr4-runtime:4.13.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     // Kotlin dependencies
@@ -25,23 +25,23 @@ dependencies {
 // ANTLR CONFIGURATION
 // =============================================================================
 
-tasks.generateGrammarSource {
-    maxHeapSize = "64m"
-
-    arguments = arguments + listOf(
-        "-visitor",
-        "-listener",
-        "-package", "io.github.thisismeamir.seamake.parser",
-        "-long-messages"
-    )
-
-    outputDirectory = file("src/main/generated/")
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    dependsOn(tasks.generateGrammarSource)
-    dependsOn(tasks.generateTestGrammarSource)
-}
+//tasks.generateGrammarSource {
+//    maxHeapSize = "64m"
+//
+//    arguments = arguments + listOf(
+//        "-visitor",
+//        "-listener",
+//        "-package", "io.github.thisismeamir.seamake.parser",
+//        "-long-messages"
+//    )
+//
+//    outputDirectory = file("src/main/generated/")
+//}
+//
+//tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+//    dependsOn(tasks.generateGrammarSource)
+//    dependsOn(tasks.generateTestGrammarSource)
+//}
 
 sourceSets {
     main {
@@ -51,15 +51,7 @@ sourceSets {
     }
 }
 
-tasks.jar {
-    manifest {
-        attributes["Main-Class"] = "io.github.thisismeamir.seamake.analyzer.SeamakeKt"
-    }
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
-        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
-}
+
 
 // =============================================================================
 // KOTLIN & JAVA TOOLCHAIN CONFIGURATION

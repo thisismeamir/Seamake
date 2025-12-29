@@ -1,7 +1,5 @@
 package io.github.thisismeamir.seamake.analyzer.parser
 
-import io.github.thisismeamir.seamake.parser.CMakeParser
-
 /**
  * Extract command invocations from parsed CMake tree
  */

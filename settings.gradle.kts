@@ -7,5 +7,5 @@
  */
 
 rootProject.name = "Seamake"
-include(":parser-analyzer")
-
+include(":parser")
+include(":analyzer")
