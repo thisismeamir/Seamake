@@ -27,3 +27,43 @@ build
 /.idea/gradle.xml
 /.idea/misc.xml
 /.idea/vcs.xml
+
+# Gradle
+.gradle/
+build/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# Kotlin
+*.class
+
+# Generated files
+src/main/java/com/seamake/parser/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+
+# Analysis outputs
+analysis-report.json
+analysis-report.txt
