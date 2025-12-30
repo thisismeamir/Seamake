@@ -3,7 +3,7 @@ plugins {
     application
 }
 
-group = "io.github.thisismeamir.seamake.analyzer"
+group = "io.github.thisismeamir.seemake.analyzer"
 version = "0.0.1"
 
 repositories {
@@ -24,8 +24,8 @@ tasks.test {
 }
 
 application {
-    mainClass.set("io.github.thisismeamir.seamake.analyzer.SeamakeKt")
-    applicationName = "seamake"
+    mainClass.set("io.github.thisismeamir.seemake.analyzer.SeemakeKt")
+    applicationName = "seemake"
 
     applicationDefaultJvmArgs = listOf(
         "-Xmx512m",
@@ -61,7 +61,7 @@ java {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "io.github.thisismeamir.seamake.analyzer.SeamakeKt"
+        attributes["Main-Class"] = "io.github.thisismeamir.seemake.analyzer.SeemakeKt"
     }
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
         exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
