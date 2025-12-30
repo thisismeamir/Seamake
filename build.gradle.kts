@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.github.thisismeamir.seemake"
-version = System.getenv("VERSION") ?: "1.0.0"
+version = System.getenv("VERSION") ?: "1.0.2"
 
 allprojects {
     group = rootProject.group
