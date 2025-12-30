@@ -129,6 +129,20 @@ jobs:
           name: build-artifacts
           path: ./artifacts
 
+      - name: List artifacts and find JAR
+        run: |
+          Write-Host "=== Artifacts structure ==="
+          Get-ChildItem -Recurse ./artifacts
+          Write-Host "=== Looking for standalone JAR ==="
+          $jar = Get-ChildItem -Recurse -Filter "*standalone.jar" ./artifacts | Select-Object -First 1
+          if ($jar) {
+            Write-Host "Found JAR at: $($jar.FullName)"
+            echo "JAR_PATH=$($jar.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          } else {
+            Write-Error "Standalone JAR not found!"
+            exit 1
+          }
+
       - name: Install WiX Toolset
         run: |
           choco install wixtoolset -y
@@ -142,8 +156,8 @@ jobs:
           New-Item -ItemType Directory -Force -Path ".\package\windows\bin"
           New-Item -ItemType Directory -Force -Path ".\package\windows\installer"
           
-          # Copy JAR
-          Copy-Item ".\artifacts\analyzer\build\libs\analyzer-$version-standalone.jar" ".\package\windows\bin\seemake.jar"
+          # Copy JAR using the path we found
+          Copy-Item $env:JAR_PATH ".\package\windows\bin\seemake.jar"
           
           # Create batch script
           @"
@@ -209,9 +223,24 @@ jobs:
           name: build-artifacts
           path: ./artifacts
 
+      - name: Find standalone JAR
+        id: find_jar
+        run: |
+          echo "=== Artifacts structure ==="
+          find ./artifacts -type f
+          echo "=== Looking for standalone JAR ==="
+          JAR_PATH=$(find ./artifacts -name "*standalone.jar" -type f | head -n 1)
+          if [ -z "$JAR_PATH" ]; then
+            echo "Error: Standalone JAR not found!"
+            exit 1
+          fi
+          echo "Found JAR at: $JAR_PATH"
+          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_OUTPUT
+
       - name: Create DEB package
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
+          JAR_PATH="${{ steps.find_jar.outputs.JAR_PATH }}"
           
           # Create directory structure
           mkdir -p package/deb/seemake_${VERSION}/DEBIAN
@@ -220,8 +249,7 @@ jobs:
           mkdir -p package/deb/seemake_${VERSION}/usr/share/doc/seemake
           
           # Copy JAR
-          cp artifacts/analyzer/build/libs/analyzer-${VERSION}-standalone.jar \
-             package/deb/seemake_${VERSION}/usr/share/seemake/seemake.jar
+          cp "$JAR_PATH" package/deb/seemake_${VERSION}/usr/share/seemake/seemake.jar
           
           # Create launcher script
           cat > package/deb/seemake_${VERSION}/usr/bin/seemake << 'EOF'
@@ -262,6 +290,7 @@ jobs:
       - name: Create RPM package
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
+          JAR_PATH="${{ steps.find_jar.outputs.JAR_PATH }}"
           
           # Install rpmbuild
           sudo apt-get update
@@ -273,8 +302,7 @@ jobs:
           mkdir -p package/rpm/BUILD/seemake-${VERSION}/usr/share/seemake
           
           # Copy JAR
-          cp artifacts/analyzer/build/libs/analyzer-${VERSION}-standalone.jar \
-             package/rpm/BUILD/seemake-${VERSION}/usr/share/seemake/seemake.jar
+          cp "$JAR_PATH" package/rpm/BUILD/seemake-${VERSION}/usr/share/seemake/seemake.jar
           
           # Create launcher script
           cat > package/rpm/BUILD/seemake-${VERSION}/usr/bin/seemake << 'EOF'
@@ -319,6 +347,7 @@ jobs:
       - name: Create Arch Linux package
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
+          JAR_PATH="${{ steps.find_jar.outputs.JAR_PATH }}"
           
           # Create directory structure
           mkdir -p package/arch
@@ -355,7 +384,7 @@ jobs:
           
           cd package/arch
           # Copy the JAR for building
-          cp ../../artifacts/analyzer/build/libs/analyzer-${VERSION}-standalone.jar seemake-${VERSION}.jar
+          cp "$JAR_PATH" seemake-${VERSION}.jar
           
           # Build package
           fakeroot fakechroot makepkg --skipinteg -f || true
@@ -389,16 +418,30 @@ jobs:
           name: build-artifacts
           path: ./artifacts
 
+      - name: Find standalone JAR
+        id: find_jar
+        run: |
+          echo "=== Artifacts structure ==="
+          find ./artifacts -type f
+          echo "=== Looking for standalone JAR ==="
+          JAR_PATH=$(find ./artifacts -name "*standalone.jar" -type f | head -n 1)
+          if [ -z "$JAR_PATH" ]; then
+            echo "Error: Standalone JAR not found!"
+            exit 1
+          fi
+          echo "Found JAR at: $JAR_PATH"
+          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_OUTPUT
+
       - name: Create macOS package
         run: |
           VERSION="${{ needs.create-release.outputs.version }}"
+          JAR_PATH="${{ steps.find_jar.outputs.JAR_PATH }}"
           
           # Create app bundle structure
           mkdir -p package/macos/Seemake.app/Contents/{MacOS,Resources}
           
           # Copy JAR
-          cp artifacts/analyzer/build/libs/analyzer-${VERSION}-standalone.jar \
-             package/macos/Seemake.app/Contents/Resources/seemake.jar
+          cp "$JAR_PATH" package/macos/Seemake.app/Contents/Resources/seemake.jar
           
           # Create launcher script
           cat > package/macos/Seemake.app/Contents/MacOS/seemake << 'EOF'
