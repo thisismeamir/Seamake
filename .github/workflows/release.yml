@@ -39,10 +39,22 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
+      - name: Build standalone JAR
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: ./gradlew :analyzer:executableJar -Pversion=${{ steps.version.outputs.VERSION }}
+
       - name: Build distributions
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
-        run: ./gradlew distZip distTar -Pversion=${{ steps.version.outputs.VERSION }}
+        run: ./gradlew :analyzer:distZip :analyzer:distTar -Pversion=${{ steps.version.outputs.VERSION }}
+
+      - name: List build artifacts
+        run: |
+          echo "=== Analyzer libs ==="
+          ls -la analyzer/build/libs/ || echo "No libs found"
+          echo "=== Analyzer distributions ==="
+          ls -la analyzer/build/distributions/ || echo "No distributions found"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -74,6 +86,12 @@ jobs:
         with:
           name: build-artifacts
           path: ./artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          echo "=== Downloaded artifacts structure ==="
+          find ./artifacts -type f
+          echo "=== End of artifacts ==="
 
       - name: Create Release
         id: create_release
