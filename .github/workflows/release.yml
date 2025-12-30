@@ -249,11 +249,11 @@ jobs:
   candle ".\package\windows\installer\seemake.wxs" -out ".\package\windows\installer\seemake.wixobj"
   light ".\package\windows\installer\seemake.wixobj" -out ".\package\windows\seemake-$version-windows.msi"
 
-- name: Upload Windows Installer
-  uses: softprops/action-gh-release@v1
-  with:
-    tag_name: v${{ needs.create-release.outputs.version }}
-    files: ./package/windows/seemake-${{ needs.create-release.outputs.version }}-windows.msi
+  - name: Upload Windows Installer
+    uses: softprops/action-gh-release@v1
+    with:
+      tag_name: v${{ needs.create-release.outputs.version }}
+      files: ./package/windows/seemake-${{ needs.create-release.outputs.version }}-windows.msi
 
 package-linux:
   name: Package for Linux
@@ -327,7 +327,7 @@ package-linux:
         
         # Create launcher script
         cat > package/deb/seemake_${VERSION}/usr/bin/seemake << 'EOF'
-#!/bin/bash
+  #!/bin/bash
   exec java -jar /usr/share/seemake/seemake.jar "$@"
   EOF
   chmod +x package/deb/seemake_${VERSION}/usr/bin/seemake
@@ -361,32 +361,32 @@ License: Apache-2.0
   dpkg-deb --build package/deb/seemake_${VERSION}
   mv package/deb/seemake_${VERSION}.deb package/seemake-${VERSION}-amd64.deb
 
-- name: Create RPM package
-  run: |
-    VERSION="${{ needs.create-release.outputs.version }}"
-    JAR_PATH="${{ steps.find_jar.outputs.JAR_PATH }}"
+  - name: Create RPM package
+    run: |
+      VERSION="${{ needs.create-release.outputs.version }}"
+      JAR_PATH="${{ steps.find_jar.outputs.JAR_PATH }}"
+      
+      # Install rpmbuild
+      sudo apt-get update
+      sudo apt-get install -y rpm
+      
+      # Create directory structure
+      mkdir -p package/rpm/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+      mkdir -p package/rpm/BUILD/seemake-${VERSION}/usr/bin
+      mkdir -p package/rpm/BUILD/seemake-${VERSION}/usr/share/seemake
+      
+      # Copy JAR
+      cp "$JAR_PATH" package/rpm/BUILD/seemake-${VERSION}/usr/share/seemake/seemake.jar
+      
+      # Create launcher script
+      cat > package/rpm/BUILD/seemake-${VERSION}/usr/bin/seemake << 'EOF'
+    #!/bin/bash
+    exec java -jar /usr/share/seemake/seemake.jar "$@"
+    EOF
+    chmod +x package/rpm/BUILD/seemake-${VERSION}/usr/bin/seemake
     
-    # Install rpmbuild
-    sudo apt-get update
-    sudo apt-get install -y rpm
-    
-    # Create directory structure
-    mkdir -p package/rpm/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-    mkdir -p package/rpm/BUILD/seemake-${VERSION}/usr/bin
-    mkdir -p package/rpm/BUILD/seemake-${VERSION}/usr/share/seemake
-    
-    # Copy JAR
-    cp "$JAR_PATH" package/rpm/BUILD/seemake-${VERSION}/usr/share/seemake/seemake.jar
-    
-    # Create launcher script
-    cat > package/rpm/BUILD/seemake-${VERSION}/usr/bin/seemake << 'EOF'
-#!/bin/bash
-  exec java -jar /usr/share/seemake/seemake.jar "$@"
-  EOF
-  chmod +x package/rpm/BUILD/seemake-${VERSION}/usr/bin/seemake
-  
-  # Create spec file
-  cat > package/rpm/SPECS/seemake.spec << EOF
+    # Create spec file
+    cat > package/rpm/SPECS/seemake.spec << EOF
 Name:           seemake
 Version:        ${VERSION}
 Release:        1%{?dist}
@@ -411,64 +411,12 @@ Requires:       java-21-openjdk
   
   %changelog
   * $(date "+%a %b %d %Y") Seemake Team <your-email@example.com> - ${VERSION}-1
-- Release ${VERSION}
-  EOF
-  
-  # Build RPM
-  rpmbuild --define "_topdir $(pwd)/package/rpm" -bb package/rpm/SPECS/seemake.spec
-  cp package/rpm/RPMS/*/seemake-*.rpm package/seemake-${VERSION}-1.x86_64.rpm
-
-- name: Create Arch Linux package
-  run: |
-    VERSION="${{ needs.create-release.outputs.version }}"
-    JAR_PATH="${{ steps.find_jar.outputs.JAR_PATH }}"
+  - Release ${VERSION}
+    EOF
     
-    # Create directory structure
-    mkdir -p package/arch
-    
-    # Create PKGBUILD
-    cat > package/arch/PKGBUILD << EOF
-# Maintainer: Seemake Team <your-email@example.com>
-  pkgname=seemake
-  pkgver=${VERSION}
-  pkgrel=1
-  pkgdesc="CMake analyzer for Kotlin/Java"
-  arch=('any')
-  url="https://github.com/thisismeamir/Seemake"
-  license=('Apache')
-  depends=('java-runtime>=21')
-  source=("seemake-\${pkgver}.jar::https://github.com/thisismeamir/Seemake/releases/download/v\${pkgver}/analyzer-\${pkgver}-standalone.jar")
-  sha256sums=('SKIP')
-  
-  package() {
-  install -Dm644 "seemake-\${pkgver}.jar" "\${pkgdir}/usr/share/seemake/seemake.jar"
-  
-  install -d "\${pkgdir}/usr/bin"
-  cat > "\${pkgdir}/usr/bin/seemake" << 'LAUNCHER'
-  #!/bin/bash
-  exec java -jar /usr/share/seemake/seemake.jar "\$@"
-  LAUNCHER
-  chmod +x "\${pkgdir}/usr/bin/seemake"
-}
-  EOF
-  
-  # Install tools and build package
-  sudo apt-get update
-  sudo apt-get install -y pacman fakeroot fakechroot
-  
-  ls $JAR_PATH
-  cd package/arch
-  # Copy the JAR for building (use absolute path)
-  cp "$(realpath ../../$JAR_PATH)" seemake-${VERSION}.jar
-  
-  # Build package
-  fakeroot fakechroot makepkg --skipinteg -f || true
-  
-  # Move package if it was created
-  if ls seemake-${VERSION}-*.pkg.tar.zst 1> /dev/null 2>&1; then
-  mv seemake-${VERSION}-*.pkg.tar.zst ../seemake-${VERSION}-1-any.pkg.tar.zst
-  fi
-
+    # Build RPM
+    rpmbuild --define "_topdir $(pwd)/package/rpm" -bb package/rpm/SPECS/seemake.spec
+    cp package/rpm/RPMS/*/seemake-*.rpm package/seemake-${VERSION}-1.x86_64.rpm
 - name: Upload Linux packages
   uses: softprops/action-gh-release@v1
   with:
@@ -476,7 +424,6 @@ Requires:       java-21-openjdk
     files: |
       ./package/seemake-${{ needs.create-release.outputs.version }}-amd64.deb
       ./package/seemake-${{ needs.create-release.outputs.version }}-1.x86_64.rpm
-      ./package/seemake-${{ needs.create-release.outputs.version }}-1-any.pkg.tar.zst
 
 package-macos:
   name: Package for macOS
@@ -547,7 +494,7 @@ package-macos:
         
         # Create launcher script
         cat > package/macos/Seemake.app/Contents/MacOS/seemake << 'EOF'
-#!/bin/bash
+  #!/bin/bash
   DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   exec java -jar "$DIR/../Resources/seemake.jar" "$@"
   EOF
@@ -612,13 +559,13 @@ package-macos:
   cd package/macos
   tar -czf ../seemake-${VERSION}-macos.tar.gz Seemake.app homebrew
 
-- name: Upload macOS packages
-  uses: softprops/action-gh-release@v1
-  with:
-    tag_name: v${{ needs.create-release.outputs.version }}
-    files: |
-      ./package/seemake-${{ needs.create-release.outputs.version }}-macos.dmg
-      ./package/seemake-${{ needs.create-release.outputs.version }}-macos.tar.gz
+  - name: Upload macOS packages
+    uses: softprops/action-gh-release@v1
+    with:
+      tag_name: v${{ needs.create-release.outputs.version }}
+      files: |
+        ./package/seemake-${{ needs.create-release.outputs.version }}-macos.dmg
+        ./package/seemake-${{ needs.create-release.outputs.version }}-macos.tar.gz
 
 publish-jitpack:
   name: Trigger JitPack build
