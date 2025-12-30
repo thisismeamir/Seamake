@@ -1,30 +1,17 @@
 plugins {
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
     application
-}
-
-group = "io.github.thisismeamir.seemake.analyzer"
-version = "0.0.1"
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
     implementation(project(":parser"))
     implementation("org.antlr:antlr4-runtime:4.13.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    // Kotlin dependencies
-    implementation(kotlin("stdlib"))
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 application {
-    mainClass.set("io.github.thisismeamir.seemake.analyzer.SeemakeKt")
+    mainClass.set("com.github.thisismeamir.seemake.analyzer.SeemakeKt")
     applicationName = "seemake"
 
     applicationDefaultJvmArgs = listOf(
@@ -43,28 +30,42 @@ tasks.named<JavaExec>("run") {
 distributions {
     main {
         contents {
-            from("README.md")
-            from("LICENSE")
+            from(rootProject.file("README.md")) {
+                into("")
+            }
+            from(rootProject.file("LICENSE")) {
+                into("")
+            }
         }
     }
 }
 
-kotlin {
-    jvmToolchain(21)
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 tasks.jar {
+    dependsOn(":parser:jar")
     manifest {
-        attributes["Main-Class"] = "io.github.thisismeamir.seemake.analyzer.SeemakeKt"
+        attributes["Main-Class"] = "com.github.thisismeamir.seemake.analyzer.SeemakeKt"
     }
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
         exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
+}
+
+// Create a standalone executable JAR
+tasks.register<Jar>("executableJar") {
+    dependsOn(tasks.jar)
+    archiveClassifier.set("standalone")
+    manifest {
+        attributes["Main-Class"] = "com.github.thisismeamir.seemake.analyzer.SeemakeKt"
+        attributes["Implementation-Version"] = project.version
+    }
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+    with(tasks.jar.get())
+}
+
+tasks.named("build") {
+    dependsOn("executableJar")
 }

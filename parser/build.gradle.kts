@@ -5,26 +5,16 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
 plugins {
-    kotlin("jvm") version "2.2.21"
-    kotlin("plugin.serialization")  version "2.2.21"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
     antlr
-}
-
-group = "io.github.thisismeamir.seemake.parser"
-version = "0.0.1"
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
     // ANTLR dependencies
-    antlr("org.antlr:antlr4:4.+")
+    antlr("org.antlr:antlr4:4.13.1")
     implementation("org.antlr:antlr4-runtime:4.13.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    // Kotlin dependencies
-    implementation(kotlin("stdlib"))
-    testImplementation(kotlin("test"))
 }
 
 // =============================================================================
@@ -37,7 +27,7 @@ tasks.generateGrammarSource {
     arguments = arguments + listOf(
         "-visitor",
         "-listener",
-        "-package", "io.github.thisismeamir.seemake.parser",
+        "-package", "com.github.thisismeamir.seemake.parser",
         "-long-messages"
     )
 
@@ -69,7 +59,7 @@ abstract class MoveGeneratedFilesTask : DefaultTask() {
 val moveGeneratedFiles = tasks.register<MoveGeneratedFilesTask>("moveGeneratedFiles") {
     dependsOn(tasks.generateGrammarSource)
     sourceDir.set(layout.projectDirectory.dir("src/main/generated"))
-    targetDir.set(layout.projectDirectory.dir("src/main/generated/io/github/thisismeamir/seemake/parser"))
+    targetDir.set(layout.projectDirectory.dir("src/main/generated/com/github/thisismeamir/seemake/parser"))
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -82,21 +72,5 @@ sourceSets {
         java {
             srcDir("src/main/generated/")
         }
-    }
-}
-
-
-
-// =============================================================================
-// KOTLIN & JAVA TOOLCHAIN CONFIGURATION
-// =============================================================================
-
-kotlin {
-    jvmToolchain(21)
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
