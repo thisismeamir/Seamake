@@ -35,7 +35,8 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
         run: ./gradlew build -Pversion=${{ steps.version.outputs.VERSION }}
-
+      - name: Assemble with Gradle
+        run: ./gradlew assemble -Pversion=${{ steps.version.outputs.VERSION }}
       - name: Run tests
         run: ./gradlew test
 
