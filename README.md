@@ -44,17 +44,6 @@ To add support for new CMake patterns:
 3. Document the handler
 4. Submit with examples
 
-## Performance
-
-- **Small projects** (<10 files): ~100ms
-- **Medium projects** (10-100 files): ~500ms
-- **Large projects** (>100 files): ~2-5s
-
-Performance is primarily dependent on:
-- Number of CMakeLists.txt files
-- Depth of subdirectory structure
-- Complexity of CMake logic
-
 ## Future Enhancements
 
 Potential improvements:
