@@ -38,13 +38,39 @@ class AnalysisContext(val rootDirectory: File) {
         dependencies.add(dependency)
     }
 
+    fun updateDependency(
+        matchCondition: (Dependency) -> Boolean,
+        updater: (Dependency) -> Dependency
+    ) {
+        for (i in dependencies.indices) {
+            if (matchCondition(dependencies[i])) {
+                dependencies[i] = updater(dependencies[i])
+            }
+        }
+    }
     fun addOption(option: Option) {
         options.add(option)
+    }
+
+    fun updateOption(
+        matchCondition: (Option) -> Boolean,
+        updater: (Option) -> Option
+    ) {
+        for (i in options.indices) {
+            if (matchCondition(options[i])) {
+                options[i] = updater(options[i])
+            }
+        }
     }
 
     fun setVariable(name: String, value: String) {
         variables[name] = value
     }
+
+    fun getVariable(name: String): String? {
+        return variables[name]
+    }
+
 
     fun addSubproject(subproject: CMakeProject) {
         subprojects.add(subproject)
