@@ -3,7 +3,7 @@ package com.github.thisismeamir.seemake.analyzer.core
 import com.github.thisismeamir.seemake.analyzer.model.CMakeProject
 import com.github.thisismeamir.seemake.analyzer.model.Dependency
 import com.github.thisismeamir.seemake.analyzer.model.Option
-import com.github.thisismeamir.seemake.analyzer.model.Target
+import com.github.thisismeamir.seemake.analyzer.model.CMakeTarget
 import java.io.File
 
 /**

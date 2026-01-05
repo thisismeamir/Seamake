@@ -1,11 +1,11 @@
 package com.github.thisismeamir.seemake.analyzer.core
 
 
+import com.github.thisismeamir.seemake.analyzer.edge.EdgeCaseHandler
 import com.github.thisismeamir.seemake.analyzer.model.*
+import com.github.thisismeamir.seemake.analyzer.parser.CMakeCommandExtractor
 import com.github.thisismeamir.seemake.analyzer.parser.CMakeCommandExtractor.CommandInvocation
 import com.github.thisismeamir.seemake.analyzer.parser.CMakeFileParser
-import com.github.thisismeamir.seemake.analyzer.parser.CMakeCommandExtractor
-import com.github.thisismeamir.seemake.analyzer.edge.EdgeCaseHandler
 import java.io.File
 
 /**
@@ -17,11 +17,12 @@ class CMakeAnalyzer(
 
     private val parser = CMakeFileParser()
     private val commandExtractor = CMakeCommandExtractor()
-
+    lateinit var rootDir : File
     /**
      * Analyze a CMake project starting from root directory
      */
     fun analyze(rootDirectory: File): CMakeProject {
+        rootDir = rootDirectory
         if (!rootDirectory.exists() || !rootDirectory.isDirectory) {
             throw IllegalArgumentException("Root directory does not exist: ${rootDirectory.absolutePath}")
         }
@@ -33,6 +34,10 @@ class CMakeAnalyzer(
 
         val context = AnalysisContext(rootDirectory)
         analyzeCMakeFile(cmakeFile, context)
+        // Some brute force analysis that would help enhancements
+        // Add others by walking the directory
+        val detectedLanguages = languageUsagesInDirectory(context.rootDirectory).distinct()
+        context.languages.addAll(detectedLanguages)
 
         return buildProject(context)
     }
@@ -42,7 +47,8 @@ class CMakeAnalyzer(
             val parseTree = parser.parse(file)
             val commands = commandExtractor.extractCommands(parseTree)
 
-            context.addCMakeFile(file.absolutePath)
+            // adding the CMake file to the context with respect to the root directory.
+            context.addCMakeFile(file.relativeTo(rootDir).path)
 
             for (command in commands) {
                 processCommand(command, context, file.parentFile)
@@ -98,12 +104,14 @@ class CMakeAnalyzer(
                         i += 2
                     } else i++
                 }
+
                 "DESCRIPTION" -> {
                     if (i + 1 < command.arguments.size) {
                         context.projectDescription = command.arguments[i + 1]
                         i += 2
                     } else i++
                 }
+
                 "LANGUAGES" -> {
                     i++
                     while (i < command.arguments.size && !isKeyword(command.arguments[i])) {
@@ -111,6 +119,7 @@ class CMakeAnalyzer(
                         i++
                     }
                 }
+
                 else -> {
                     if (!isKeyword(command.arguments[i])) {
                         context.languages.add(command.arguments[i])
@@ -134,17 +143,19 @@ class CMakeAnalyzer(
         val name = command.arguments[0]
         val sources = command.arguments.drop(1).filter { !isKeyword(it) }
 
-        context.addTarget(Target(
-            name = name,
-            type = TargetType.EXECUTABLE,
-            sources = sources,
-            linkLibraries = emptyList(),
-            includeDirectories = emptyList(),
-            compileDefinitions = emptyList(),
-            compileOptions = emptyList(),
-            properties = emptyMap(),
-            dependencies = emptyList()
-        ))
+        context.addTarget(
+            CMakeTarget(
+                name = name,
+                type = TargetType.EXECUTABLE,
+                sources = sources,
+                linkLibraries = emptyList(),
+                includeDirectories = emptyList(),
+                compileDefinitions = emptyList(),
+                compileOptions = emptyList(),
+                properties = emptyMap(),
+                dependencies = emptyList()
+            )
+        )
     }
 
     private fun handleAddLibrary(command: CommandInvocation, context: AnalysisContext) {
@@ -160,18 +171,22 @@ class CMakeAnalyzer(
                     type = TargetType.STATIC_LIBRARY
                     startIndex = 2
                 }
+
                 "SHARED" -> {
                     type = TargetType.SHARED_LIBRARY
                     startIndex = 2
                 }
+
                 "MODULE" -> {
                     type = TargetType.MODULE_LIBRARY
                     startIndex = 2
                 }
+
                 "OBJECT" -> {
                     type = TargetType.OBJECT_LIBRARY
                     startIndex = 2
                 }
+
                 "INTERFACE" -> {
                     type = TargetType.INTERFACE_LIBRARY
                     startIndex = 2
@@ -181,17 +196,19 @@ class CMakeAnalyzer(
 
         val sources = command.arguments.drop(startIndex).filter { !isKeyword(it) }
 
-        context.addTarget(Target(
-            name = name,
-            type = type,
-            sources = sources,
-            linkLibraries = emptyList(),
-            includeDirectories = emptyList(),
-            compileDefinitions = emptyList(),
-            compileOptions = emptyList(),
-            properties = emptyMap(),
-            dependencies = emptyList()
-        ))
+        context.addTarget(
+            CMakeTarget(
+                name = name,
+                type = type,
+                sources = sources,
+                linkLibraries = emptyList(),
+                includeDirectories = emptyList(),
+                compileDefinitions = emptyList(),
+                compileOptions = emptyList(),
+                properties = emptyMap(),
+                dependencies = emptyList()
+            )
+        )
     }
 
     private fun handleTargetLinkLibraries(command: CommandInvocation, context: AnalysisContext) {
@@ -263,16 +280,19 @@ class CMakeAnalyzer(
                     isRequired = true
                     i++
                 }
+
                 "OPTIONAL" -> {
                     isOptional = true
                     i++
                 }
+
                 "EXACT" -> {
                     if (version != null) {
                         versionConstraint = VersionConstraint("EXACT", version)
                     }
                     i++
                 }
+
                 "COMPONENTS" -> {
                     i++
                     while (i < command.arguments.size && !isKeyword(command.arguments[i])) {
@@ -280,6 +300,7 @@ class CMakeAnalyzer(
                         i++
                     }
                 }
+
                 else -> {
                     // Check if it's a version number
                     if (version == null && command.arguments[i].matches(Regex("""[\d.]+"""))) {
@@ -290,17 +311,19 @@ class CMakeAnalyzer(
             }
         }
 
-        context.addDependency(Dependency(
-            name = name,
-            type = DependencyType.FIND_PACKAGE,
-            version = version,
-            versionConstraint = versionConstraint,
-            components = components,
-            isRequired = isRequired,
-            isOptional = isOptional,
-            targets = emptyList(),
-            variables = emptyMap()
-        ))
+        context.addDependency(
+            Dependency(
+                name = name,
+                type = DependencyType.FIND_PACKAGE,
+                version = version,
+                versionConstraint = versionConstraint,
+                components = components,
+                isRequired = isRequired,
+                isOptional = isOptional,
+                targets = emptyList(),
+                variables = emptyMap()
+            )
+        )
     }
 
     private fun handleFetchContentDeclare(command: CommandInvocation, context: AnalysisContext) {
@@ -319,29 +342,33 @@ class CMakeAnalyzer(
                         i += 2
                     } else i++
                 }
+
                 "GIT_TAG" -> {
                     if (i + 1 < command.arguments.size) {
                         gitTag = command.arguments[i + 1]
                         i += 2
                     } else i++
                 }
+
                 else -> i++
             }
         }
 
-        context.addDependency(Dependency(
-            name = name,
-            type = DependencyType.FETCH_CONTENT,
-            version = gitTag,
-            versionConstraint = null,
-            components = emptyList(),
-            isRequired = false,
-            isOptional = false,
-            targets = emptyList(),
-            variables = emptyMap(),
-            gitRepository = gitRepo,
-            gitTag = gitTag
-        ))
+        context.addDependency(
+            Dependency(
+                name = name,
+                type = DependencyType.FETCH_CONTENT,
+                version = gitTag,
+                versionConstraint = null,
+                components = emptyList(),
+                isRequired = false,
+                isOptional = false,
+                targets = emptyList(),
+                variables = emptyMap(),
+                gitRepository = gitRepo,
+                gitTag = gitTag
+            )
+        )
     }
 
     private fun handleAddSubdirectory(command: CommandInvocation, context: AnalysisContext, currentDir: File) {
@@ -357,18 +384,20 @@ class CMakeAnalyzer(
             context.addSubproject(buildProject(subContext))
         }
 
-        context.addDependency(Dependency(
-            name = subdirPath,
-            type = DependencyType.SUBDIRECTORY,
-            version = null,
-            versionConstraint = null,
-            components = emptyList(),
-            isRequired = false,
-            isOptional = false,
-            targets = emptyList(),
-            variables = emptyMap(),
-            location = subdirFile.absolutePath
-        ))
+        context.addDependency(
+            Dependency(
+                name = subdirPath,
+                type = DependencyType.SUBDIRECTORY,
+                version = null,
+                versionConstraint = null,
+                components = emptyList(),
+                isRequired = false,
+                isOptional = false,
+                targets = emptyList(),
+                variables = emptyMap(),
+                location = subdirFile.absolutePath
+            )
+        )
     }
 
     private fun handleOption(command: CommandInvocation, context: AnalysisContext) {
@@ -378,12 +407,14 @@ class CMakeAnalyzer(
         val description = command.arguments[1]
         val defaultValue = if (command.arguments.size > 2) command.arguments[2] else "OFF"
 
-        context.addOption(Option(
-            name = name,
-            description = description,
-            defaultValue = defaultValue,
-            type = OptionType.BOOL
-        ))
+        context.addOption(
+            Option(
+                name = name,
+                description = description,
+                defaultValue = defaultValue,
+                type = OptionType.BOOL
+            )
+        )
     }
 
     private fun handleSet(command: CommandInvocation, context: AnalysisContext) {
@@ -409,12 +440,14 @@ class CMakeAnalyzer(
                 else -> OptionType.UNKNOWN
             }
 
-            context.addOption(Option(
-                name = name,
-                description = description,
-                defaultValue = value,
-                type = optionType
-            ))
+            context.addOption(
+                Option(
+                    name = name,
+                    description = description,
+                    defaultValue = value,
+                    type = optionType
+                )
+            )
         } else {
             // Regular variable
             val value = command.arguments.drop(1).joinToString(" ")
@@ -499,7 +532,7 @@ class CMakeAnalyzer(
             projectVersion = context.projectVersion,
             projectDescription = context.projectDescription,
             languages = context.languages.toList(),
-            targets = context.targets.values.toList(),
+            cmakeTargets = context.targets.values.toList(),
             dependencies = context.dependencies.toList(),
             options = context.options.toList(),
             variables = context.variables.toMap(),
@@ -507,6 +540,38 @@ class CMakeAnalyzer(
             cmakeFiles = context.cmakeFiles.toList(),
             cmakeMinimumVersion = context.cmakeMinimumVersion
         )
+    }
+
+    // Checking all file extensions in the root directory to make a languages list:
+    private fun languageUsagesInDirectory(directory: File): Set<String> {
+        val extensionsToLanguages = mapOf(
+            "c" to "C",
+            "cpp" to "CXX",
+            "cxx" to "CXX",
+            "cc" to "CXX",
+            "h" to "C/CXX",
+            "hpp" to "CXX",
+            "hxx" to "CXX",
+            "hh" to "CXX",
+            "py" to "Python",
+            "java" to "Java",
+            "js" to "JavaScript",
+            "ts" to "TypeScript",
+            "cs" to "CSharp",
+            "go" to "Go",
+            "rs" to "Rust"
+        )
+
+        val languages = mutableSetOf<String>()
+
+        directory.walk().forEach { file ->
+            if (file.isFile) {
+                val ext = file.extension.lowercase()
+                extensionsToLanguages[ext]?.let { languages.add(it) }
+            }
+        }
+
+        return languages
     }
 }
 
