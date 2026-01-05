@@ -3,7 +3,7 @@ package com.github.thisismeamir.seemake.analyzer.edge
 import com.github.thisismeamir.seemake.analyzer.core.AnalysisContext
 import com.github.thisismeamir.seemake.analyzer.model.TargetType
 import com.github.thisismeamir.seemake.analyzer.parser.CMakeCommandExtractor
-import com.github.thisismeamir.seemake.analyzer.model.Target
+import com.github.thisismeamir.seemake.analyzer.model.CMakeTarget
 import java.io.File
 
 /**
@@ -35,7 +35,7 @@ class CustomMacroHandler : EdgeCaseHandler {
             emptyList()
         }
 
-        context.addTarget(Target(
+        context.addTarget(CMakeTarget(
             name = name,
             type = TargetType.STATIC_LIBRARY,
             sources = sources,
@@ -54,7 +54,7 @@ class CustomMacroHandler : EdgeCaseHandler {
         val name = command.arguments[0]
         val sources = command.arguments.drop(1)
 
-        context.addTarget(Target(
+        context.addTarget(CMakeTarget(
             name = name,
             type = TargetType.EXECUTABLE,
             sources = sources,
