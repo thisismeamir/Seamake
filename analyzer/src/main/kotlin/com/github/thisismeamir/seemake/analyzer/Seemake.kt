@@ -1,9 +1,12 @@
 package com.github.thisismeamir.seemake.analyzer
 
 
-import com.github.thisismeamir.seemake.analyzer.edge.*
+import com.github.thisismeamir.seemake.analyzer.core.CMakeAnalyzer
+import com.github.thisismeamir.seemake.analyzer.edge.EdgeCaseHandler
+import com.github.thisismeamir.seemake.analyzer.model.CMakeProject
 import com.github.thisismeamir.seemake.analyzer.report.ReportGenerator
 import com.github.thisismeamir.seemake.analyzer.report.ReportExporter
+import com.github.thisismeamir.seemake.analyzer.report.ReportFormat
 import java.io.File
 
 /**
@@ -14,15 +17,15 @@ object Seemake {
     /**
      * Analyze a CMake project with default settings
      */
-    fun analyze(rootDirectory: String): com.github.thisismeamir.seemake.analyzer.model.CMakeProject {
+    fun analyze(rootDirectory: String): CMakeProject {
         return analyze(File(rootDirectory))
     }
 
     /**
      * Analyze a CMake project with default settings
      */
-    fun analyze(rootDirectory: File): com.github.thisismeamir.seemake.analyzer.model.CMakeProject {
-        val analyzer = _root_ide_package_.com.github.thisismeamir.seemake.analyzer.core.CMakeAnalyzer()
+    fun analyze(rootDirectory: File): CMakeProject {
+        val analyzer = CMakeAnalyzer()
         return analyzer.analyze(rootDirectory)
     }
 
@@ -31,9 +34,9 @@ object Seemake {
      */
     fun analyze(
         rootDirectory: File,
-        edgeCaseHandlers: List<com.github.thisismeamir.seemake.analyzer.edge.EdgeCaseHandler>
-    ): com.github.thisismeamir.seemake.analyzer.model.CMakeProject {
-        val analyzer = _root_ide_package_.com.github.thisismeamir.seemake.analyzer.core.CMakeAnalyzer(edgeCaseHandlers)
+        edgeCaseHandlers: List<EdgeCaseHandler>
+    ): CMakeProject {
+        val analyzer = CMakeAnalyzer(edgeCaseHandlers)
         return analyzer.analyze(rootDirectory)
     }
 
@@ -42,7 +45,7 @@ object Seemake {
      */
     fun analyzeAndReport(rootDirectory: File): String {
         val project = analyze(rootDirectory)
-        val generator = _root_ide_package_.com.github.thisismeamir.seemake.analyzer.report.ReportGenerator()
+        val generator = ReportGenerator()
         return generator.generateTextReport(project)
     }
 
@@ -52,11 +55,11 @@ object Seemake {
     fun analyzeAndSaveReports(
         rootDirectory: File,
         outputDirectory: File,
-        formats: Set<com.github.thisismeamir.seemake.analyzer.ReportFormat> = setOf(
-            _root_ide_package_.com.github.thisismeamir.seemake.analyzer.ReportFormat.TEXT,
-            _root_ide_package_.com.github.thisismeamir.seemake.analyzer.ReportFormat.JSON,
-            _root_ide_package_.com.github.thisismeamir.seemake.analyzer.ReportFormat.SUMMARY,
-            _root_ide_package_.com.github.thisismeamir.seemake.analyzer.ReportFormat.DEPENDENCY_GRAPH
+        formats: Set<ReportFormat> = setOf(
+            ReportFormat.TEXT,
+            ReportFormat.JSON,
+            ReportFormat.SUMMARY,
+            ReportFormat.DEPENDENCY_GRAPH
         )
     ) {
         val project = analyze(rootDirectory)
@@ -87,13 +90,6 @@ object Seemake {
             println("Generate image with: dot -Tpng ${graphFile.name} -o dependencies.png")
         }
     }
-}
-
-enum class ReportFormat {
-    TEXT,
-    JSON,
-    SUMMARY,
-    DEPENDENCY_GRAPH
 }
 
 /**
