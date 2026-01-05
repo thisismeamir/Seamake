@@ -4,7 +4,7 @@ import com.github.thisismeamir.seemake.analyzer.model.CMakeProject
 import com.github.thisismeamir.seemake.analyzer.model.Dependency
 import com.github.thisismeamir.seemake.analyzer.model.VersionConstraint
 import java.io.File
-import com.github.thisismeamir.seemake.analyzer.model.Target
+import com.github.thisismeamir.seemake.analyzer.model.CMakeTarget
 /**
  * Utility functions for working with CMake projects
  */
@@ -179,8 +179,8 @@ object CMakeUtils {
     /**
      * Get all unique targets from a project and its subprojects
      */
-    fun getAllTargets(project: CMakeProject): List<Target> {
-        return flattenProjects(project).flatMap { it.targets }
+    fun getAllTargets(project: CMakeProject): List<CMakeTarget> {
+        return flattenProjects(project).flatMap { it.cmakeTargets }
     }
 
     /**
