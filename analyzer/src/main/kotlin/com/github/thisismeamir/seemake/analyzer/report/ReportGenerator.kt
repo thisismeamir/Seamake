@@ -5,7 +5,7 @@ import com.github.thisismeamir.seemake.analyzer.model.Dependency
 import com.github.thisismeamir.seemake.analyzer.model.DependencyType
 import com.github.thisismeamir.seemake.analyzer.model.Option
 import com.github.thisismeamir.seemake.analyzer.model.TargetType
-import com.github.thisismeamir.seemake.analyzer.model.Target
+import com.github.thisismeamir.seemake.analyzer.model.CMakeTarget
 import kotlin.collections.iterator
 
 /**
@@ -215,7 +215,7 @@ class ReportGenerator {
         sb.appendLine()
 
         // Add target nodes
-        for (target in project.targets) {
+        for (target in project.cmakeTargets) {
             val targetId = sanitizeId("target_${target.name}")
             val color = when (target.type) {
                 TargetType.EXECUTABLE -> "lightgreen"
