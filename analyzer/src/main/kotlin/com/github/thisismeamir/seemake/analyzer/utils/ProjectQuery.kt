@@ -6,7 +6,7 @@ import com.github.thisismeamir.seemake.analyzer.model.DependencyType
 import com.github.thisismeamir.seemake.analyzer.model.Option
 import com.github.thisismeamir.seemake.analyzer.model.OptionType
 import com.github.thisismeamir.seemake.analyzer.model.TargetType
-import com.github.thisismeamir.seemake.analyzer.model.Target
+import com.github.thisismeamir.seemake.analyzer.model.CMakeTarget
 
 /**
  * Query builder for filtering project components
@@ -19,22 +19,22 @@ class ProjectQuery(private val project: CMakeProject) {
 
     fun options(): OptionQuery = OptionQuery(CMakeUtils.flattenProjects(project).flatMap { it.options })
 
-    class TargetQuery(private val targets: List<Target>) {
-        fun byType(type: TargetType) = TargetQuery(targets.filter { it.type == type })
+    class TargetQuery(private val cmakeTargets: List<CMakeTarget>) {
+        fun byType(type: TargetType) = TargetQuery(cmakeTargets.filter { it.type == type })
 
-        fun byName(name: String) = targets.find { it.name == name }
+        fun byName(name: String) = cmakeTargets.find { it.name == name }
 
-        fun byNamePattern(pattern: Regex) = TargetQuery(targets.filter { it.name.matches(pattern) })
+        fun byNamePattern(pattern: Regex) = TargetQuery(cmakeTargets.filter { it.name.matches(pattern) })
 
         fun thatLink(library: String) = TargetQuery(
-            targets.filter { target ->
+            cmakeTargets.filter { target ->
                 target.linkLibraries.any { it.contains(library) }
             }
         )
 
-        fun withSources() = TargetQuery(targets.filter { it.sources.isNotEmpty() })
+        fun withSources() = TargetQuery(cmakeTargets.filter { it.sources.isNotEmpty() })
 
-        fun all() = targets
+        fun all() = cmakeTargets
     }
 
     class DependencyQuery(private val dependencies: List<Dependency>) {

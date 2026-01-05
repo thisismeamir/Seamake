@@ -3,7 +3,7 @@ package com.github.thisismeamir.seemake.analyzer.model
 /**
  * Represents a build target (executable, library, etc.)
  */
-data class Target(
+data class CMakeTarget(
     val name: String,
     val type: TargetType,
     val sources: List<String>,

@@ -16,7 +16,7 @@ class AnalysisContext(val rootDirectory: File) {
     var cmakeMinimumVersion: String? = null
 
     val languages = mutableListOf<String>()
-    val targets = mutableMapOf<String, Target>()
+    val targets = mutableMapOf<String, CMakeTarget>()
     val dependencies = mutableListOf<Dependency>()
     val options = mutableListOf<Option>()
     val variables = mutableMapOf<String, String>()
@@ -24,11 +24,11 @@ class AnalysisContext(val rootDirectory: File) {
     val cmakeFiles = mutableListOf<String>()
     val errors = mutableListOf<String>()
 
-    fun addTarget(target: Target) {
-        targets[target.name] = target
+    fun addTarget(cmakeTarget: CMakeTarget) {
+        targets[cmakeTarget.name] = cmakeTarget
     }
 
-    fun updateTarget(name: String, updater: (Target) -> Target) {
+    fun updateTarget(name: String, updater: (CMakeTarget) -> CMakeTarget) {
         targets[name]?.let { target ->
             targets[name] = updater(target)
         }

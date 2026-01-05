@@ -36,9 +36,9 @@ class ReportGenerator {
         sb.appendLine()
 
         // Targets
-        sb.appendLine("TARGETS (${project.targets.size})")
+        sb.appendLine("TARGETS (${project.cmakeTargets.size})")
         sb.appendLine("-" .repeat(80))
-        for (target in project.targets) {
+        for (target in project.cmakeTargets) {
             sb.appendLine()
             sb.appendLine("Target: ${target.name}")
             sb.appendLine("  Type: ${target.type}")
@@ -138,7 +138,7 @@ class ReportGenerator {
             for (subproject in project.subprojects) {
                 sb.appendLine("- ${subproject.projectName ?: subproject.rootDirectory}")
                 sb.appendLine("  Directory: ${subproject.rootDirectory}")
-                sb.appendLine("  Targets: ${subproject.targets.size}")
+                sb.appendLine("  Targets: ${subproject.cmakeTargets.size}")
                 sb.appendLine("  Dependencies: ${subproject.dependencies.size}")
             }
             sb.appendLine()
@@ -172,8 +172,8 @@ class ReportGenerator {
             appendLine("  \"cmakeMinimumVersion\": ${project.cmakeMinimumVersion?.toJsonString() ?: "null"},")
             appendLine("  \"languages\": ${project.languages.toJsonArray()},")
             appendLine("  \"targets\": [")
-            project.targets.forEachIndexed { index, target ->
-                appendLine("    ${targetToJson(target)}${if (index < project.targets.size - 1) "," else ""}")
+            project.cmakeTargets.forEachIndexed { index, target ->
+                appendLine("    ${targetToJson(target)}${if (index < project.cmakeTargets.size - 1) "," else ""}")
             }
             appendLine("  ],")
             appendLine("  \"dependencies\": [")
@@ -269,9 +269,9 @@ class ReportGenerator {
             appendLine("Version: ${project.projectVersion ?: "N/A"}")
             appendLine()
             appendLine("Statistics:")
-            appendLine("  - Targets: ${project.targets.size}")
-            appendLine("    - Executables: ${project.targets.count { it.type == TargetType.EXECUTABLE }}")
-            appendLine("    - Libraries: ${project.targets.count { it.type in listOf(TargetType.STATIC_LIBRARY, TargetType.SHARED_LIBRARY) }}")
+            appendLine("  - Targets: ${project.cmakeTargets.size}")
+            appendLine("    - Executables: ${project.cmakeTargets.count { it.type == TargetType.EXECUTABLE }}")
+            appendLine("    - Libraries: ${project.cmakeTargets.count { it.type in listOf(TargetType.STATIC_LIBRARY, TargetType.SHARED_LIBRARY) }}")
             appendLine("  - Dependencies: ${project.dependencies.size}")
             appendLine("    - find_package: ${project.dependencies.count { it.type == DependencyType.FIND_PACKAGE }}")
             appendLine("    - FetchContent: ${project.dependencies.count { it.type == DependencyType.FETCH_CONTENT }}")
@@ -282,18 +282,18 @@ class ReportGenerator {
         }
     }
 
-    private fun targetToJson(target: Target): String {
+    private fun targetToJson(cmakeTarget: CMakeTarget): String {
         return buildString {
             append("{")
-            append("\"name\": ${target.name.toJsonString()}, ")
-            append("\"type\": \"${target.type}\", ")
-            append("\"sources\": ${target.sources.toJsonArray()}, ")
-            append("\"linkLibraries\": ${target.linkLibraries.toJsonArray()}, ")
-            append("\"includeDirectories\": ${target.includeDirectories.toJsonArray()}, ")
-            append("\"compileDefinitions\": ${target.compileDefinitions.toJsonArray()}, ")
-            append("\"compileOptions\": ${target.compileOptions.toJsonArray()}, ")
-            append("\"properties\": ${target.properties.toJsonObject()}, ")
-            append("\"dependencies\": ${target.dependencies.toJsonArray()}")
+            append("\"name\": ${cmakeTarget.name.toJsonString()}, ")
+            append("\"type\": \"${cmakeTarget.type}\", ")
+            append("\"sources\": ${cmakeTarget.sources.toJsonArray()}, ")
+            append("\"linkLibraries\": ${cmakeTarget.linkLibraries.toJsonArray()}, ")
+            append("\"includeDirectories\": ${cmakeTarget.includeDirectories.toJsonArray()}, ")
+            append("\"compileDefinitions\": ${cmakeTarget.compileDefinitions.toJsonArray()}, ")
+            append("\"compileOptions\": ${cmakeTarget.compileOptions.toJsonArray()}, ")
+            append("\"properties\": ${cmakeTarget.properties.toJsonObject()}, ")
+            append("\"dependencies\": ${cmakeTarget.dependencies.toJsonArray()}")
             append("}")
         }
     }

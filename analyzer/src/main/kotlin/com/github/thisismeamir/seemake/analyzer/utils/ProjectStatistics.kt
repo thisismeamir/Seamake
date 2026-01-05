@@ -25,7 +25,7 @@ object ProjectStatistics {
 
     fun calculate(project: CMakeProject): Statistics {
         val allProjects = CMakeUtils.flattenProjects(project)
-        val allTargets = allProjects.flatMap { it.targets }
+        val allTargets = allProjects.flatMap { it.cmakeTargets }
         val allDependencies = allProjects.flatMap { it.dependencies }
 
         val executableCount = allTargets.count { it.type == TargetType.EXECUTABLE }
