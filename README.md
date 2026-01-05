@@ -1,6 +1,6 @@
-# Seamake - CMake Project Analyzer
+# Seemake - CMake Project Analyzer
 
-Seamake is a comprehensive CMake analyzer and helper tool designed for development of build automation scripts, particularly for HepSW and Unipac package managers. It provides deep analysis of CMake projects, extracting information about targets, dependencies, options, and build configurations.
+Seemake is a comprehensive CMake analyzer and helper tool designed for development of build automation scripts, particularly for HepSW and Unipac package managers. It provides deep analysis of CMake projects, extracting information about targets, dependencies, options, and build configurations.
 
 ## Features
 

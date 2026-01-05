@@ -1,0 +1,3 @@
+[submodule "sample-projects"]
+	path = sample-projects
+	url = git@github.com:thisismeamir/cmake-examples.git
